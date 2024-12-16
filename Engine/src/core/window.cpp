@@ -1,14 +1,15 @@
-#include "window.hpp"
-
+#include <iostream>
 namespace Engine::Core {
 
 Window::Window(int width, int height, std::string title) : m_width(width), m_height(height), m_title(title) {}
 Window::~Window() {
+  std::cout << "Window Deconstruct\n";
   glfwDestroyWindow(m_window);
   glfwTerminate();
 }
 
 void Window::Init() {
+  std::cout << "Window Construct\n";
   glfwInit();
   // Sets default api to none otherwise it would have been set to OPENGL
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

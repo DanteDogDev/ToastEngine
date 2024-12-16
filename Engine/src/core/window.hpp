@@ -1,6 +1,7 @@
 #include <string>
 #define GLFW_INCLUDE_VULKAN /* changes GLFW to vulkan */
 #include <GLFW/glfw3.h>
+#pragma once
 namespace Engine::Core {
 class Window {
 public:

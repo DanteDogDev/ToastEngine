@@ -26,11 +26,11 @@ file(GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
 # Add shared library target for Toast_Engine
 add_library(Toast_Engine SHARED
   ${ENGINE_SRC}
-  engine.hpp
-  engine.cpp
+  vulkanEngine.hpp
+  vulkanEngine.cpp
 )
 
-target_precompile_headers(Toast_Engine PRIVATE engine.hpp)
+target_precompile_headers(Toast_Engine PRIVATE vulkanEngine.hpp)
 
 
 # Include directories

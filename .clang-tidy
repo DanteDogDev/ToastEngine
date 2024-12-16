@@ -12,4 +12,4 @@ CheckOptions:
   - key: 'readability-identifier-naming.ClassCase'
     value: 'CamelCase'
   - key: 'readability-identifier-naming.NamespaceCase'
-    value: 'Camel_Snake_Case'
+    value: 'snake_case'

@@ -1,6 +1,9 @@
-#include <engine.hpp>
-
+#include <vulkanEngine.hpp>
+using namespace Engine;
 int main() {
-  test();
+  VulkanEngine engine;
+  engine.Init();
+  engine.Run();
+  engine.Cleanup();
   return 0;
 }
