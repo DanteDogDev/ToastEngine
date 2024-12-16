@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(Toastito_Engine)
+project(Engine)
 
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 23)
@@ -16,17 +16,17 @@ set(VULKAN_SDK "C:/VulkanSDK/1.3.296.0")
 add_compile_definitions(TOASTITO_PLATFORM_WINDOWS TOASTITO_ENGINE_DLL)
 
 
-# Add shared library target for Engine
-add_library(Engine SHARED
+# Add shared library target for Toast_Engine
+add_library(Toast_Engine SHARED
   engine.hpp
   engine.cpp
 )
 
-target_precompile_headers(Engine PRIVATE engine.hpp)
+target_precompile_headers(Toast_Engine PRIVATE engine.hpp)
 
 
 # Include directories
-target_include_directories(Engine 
+target_include_directories(Toast_Engine 
   PUBLIC
     ${VULKAN_SDK}/Include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -45,8 +45,8 @@ add_subdirectory(lib/glfw)
 # Find Vulkan package
 find_package(Vulkan REQUIRED)
 
-# Link libraries to Engine
-target_link_libraries(Engine
+# Link libraries to Toast_Engine
+target_link_libraries(Toast_Engine
   PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
     glm::glm
@@ -58,9 +58,9 @@ target_link_libraries(Engine
 set(EDITOR_DIR "${CMAKE_BINARY_DIR}/Editor")
 set(GAME_DIR "${CMAKE_BINARY_DIR}/Game")
 
-add_custom_command(TARGET Engine POST_BUILD
+add_custom_command(TARGET Toast_Engine POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${EDITOR_DIR}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${GAME_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Engine>" "${EDITOR_DIR}/$<TARGET_FILE_NAME:Engine>"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Engine>" "${GAME_DIR}/$<TARGET_FILE_NAME:Engine>"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Toast_Engine>" "${EDITOR_DIR}/$<TARGET_FILE_NAME:Toast_Engine>"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Toast_Engine>" "${GAME_DIR}/$<TARGET_FILE_NAME:Toast_Engine>"
 )
