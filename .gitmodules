@@ -10,3 +10,6 @@
 [submodule "Engine/lib/stb"]
 	path = Engine/lib/stb
 	url = https://github.com/nothings/stb
+[submodule "Engine/lib/imgui"]
+	path = Engine/lib/imgui
+	url = https://github.com/ocornut/imgui
