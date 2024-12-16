@@ -7,3 +7,6 @@
 [submodule "Engine/lib/external/spdlog"]
 	path = Engine/lib/external/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "Engine/lib/stb"]
+	path = Engine/lib/stb
+	url = https://github.com/nothings/stb
