@@ -25,18 +25,17 @@ private:
   GLFWwindow *window;
   void initWindow() {
     glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API,
-                   GLFW_NO_API); /* Sets GLFW API to use no api */
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); /* turns off resizable window */
-    window =
-        glfwCreateWindow(800, 600, "Toast Engine - Vulkan", nullptr, nullptr);
+    // Sets default api to none otherwise it would have been set to OPENGL
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    // Sets the resizable flag to false
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    window = glfwCreateWindow(800, 600, "Toast Engine - Vulkan", nullptr, nullptr);
   }
   void initVulkan() { createInstance(); }
 
   void mainLoop() {
-    while (!glfwWindowShouldClose(
-        window)) {      /*checks the close flag on the window */
-      glfwPollEvents(); /* checks for events on the window */
+    while (!glfwWindowShouldClose(window)) { /*checks the close flag on the window */
+      glfwPollEvents();                      /* checks for events on the window */
     }
   }
 

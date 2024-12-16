@@ -15,11 +15,17 @@ set(VULKAN_SDK "C:/VulkanSDK/1.3.296.0")
 # Define preprocessor macros
 add_compile_definitions(TOASTITO_PLATFORM_WINDOWS TOASTITO_ENGINE_DLL)
 
+# Find all files and add them to the library
+file(GLOB ENGINE_SRC CONFIGURE_DEPENDS 
+  "*.hpp" 
+  "*.cpp" 
+  "*.h" 
+  "*.c"
+)
 
 # Add shared library target for Toast_Engine
 add_library(Toast_Engine SHARED
-  engine.hpp
-  engine.cpp
+  ${ENGINE_SRC}
 )
 
 target_precompile_headers(Toast_Engine PRIVATE engine.hpp)
