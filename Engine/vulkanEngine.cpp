@@ -1,5 +1,8 @@
+#include "vulkanEngine.hpp"
+#include "src/core/window.hpp"
+#include "src/vulkan/renderer.hpp"
 #include <atomic>
-#include <iostream> /*in/out*/
+#include <spdlog/spdlog.h>
 #include <thread>
 
 void Spawn_Render_Thread(GLFWwindow *window, std::atomic<bool> *done) {
@@ -9,20 +12,17 @@ void Spawn_Render_Thread(GLFWwindow *window, std::atomic<bool> *done) {
     // delete engine
   }
 }
-using namespace Engine;
-VulkanEngine::VulkanEngine() : m_app(800, 600, "Vulkat Engine"), m_instanceManager() {}
-void VulkanEngine::Init() {
-  std::cout << "Init\n";
-  m_app.Init();
-  m_instanceManager.Init();
-}
-void VulkanEngine::Run() {
-  std::cout << "Run\n";
+
+void Run() {
+  spdlog::info("Init");
+  Engine::Core::Window app(800, 600, "Vulkat Engine");
+  Engine::Vulkan::Renderer renderer;
 
   std::atomic<bool> done = false;
-  std::thread render_thread(Spawn_Render_Thread, m_app.m_window, &done);
-  m_app.Run();
+  std::thread render_thread(Spawn_Render_Thread, app.m_window, &done);
+  spdlog::info("Run");
+  app.Run();
   done = true;
   render_thread.join();
+  spdlog::info("Close");
 }
-void VulkanEngine::Cleanup() { std::cout << "Cleanup\n"; }

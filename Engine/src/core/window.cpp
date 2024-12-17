@@ -1,15 +1,16 @@
-#include <iostream>
+#include "window.hpp"
+#include <spdlog/spdlog.h>
 namespace Engine::Core {
 
 Window::Window(int width, int height, std::string title) : m_width(width), m_height(height), m_title(title) {}
 Window::~Window() {
-  std::cout << "Window Deconstruct\n";
+  spdlog::info("Window Deconstruct");
   glfwDestroyWindow(m_window);
   glfwTerminate();
 }
 
 void Window::Init() {
-  std::cout << "Window Construct\n";
+  spdlog::info("Window Init");
   glfwInit();
   // Sets default api to none otherwise it would have been set to OPENGL
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -25,7 +26,9 @@ void Window::Run() {
       Tick();
     }
   } catch (const std::exception &e) {
-    std::cout << e.what() << std::endl;
+    spdlog::error("Exception caught in Run(): {}", e.what());
+    Close();
+    throw;
   }
   Close();
 }
