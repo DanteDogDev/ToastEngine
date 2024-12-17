@@ -19,6 +19,16 @@ void Window::Init() {
 }
 
 void Window::Tick() { glfwPollEvents(); }
+void Window::Run() {
+  try {
+    while (!ShouldClose()) {
+      Tick();
+    }
+  } catch (const std::exception &e) {
+    std::cout << e.what() << std::endl;
+  }
+  Close();
+}
 void Window::Close() { glfwSetWindowShouldClose(m_window, false); }
 double Window::DeltaTime() { return 0.0; } // TODO: Implement Later
 } // namespace Engine::Core

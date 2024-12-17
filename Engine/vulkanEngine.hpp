@@ -10,7 +10,7 @@ public:
   void Cleanup();
 
 private:
-  Core::Window m_window;
-  Renderer::InstanceManager InstanceManager;
+  Core::Window m_app;
+  Renderer::InstanceManager m_instanceManager;
 };
 int test();

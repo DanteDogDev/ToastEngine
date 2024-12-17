@@ -1,22 +1,28 @@
-#include <exception>
+#include <atomic>
 #include <iostream> /*in/out*/
+#include <thread>
 
+void Spawn_Render_Thread(GLFWwindow *window, std::atomic<bool> *done) {
+  // make engine
+  while (!*done) {
+
+    // delete engine
+  }
+}
 using namespace Engine;
-VulkanEngine::VulkanEngine() : m_window(800, 600, "Vulkat Engine"), InstanceManager() {}
+VulkanEngine::VulkanEngine() : m_app(800, 600, "Vulkat Engine"), m_instanceManager() {}
 void VulkanEngine::Init() {
   std::cout << "Init\n";
-  m_window.Init();
-  InstanceManager.CreateInstance();
+  m_app.Init();
+  m_instanceManager.Init();
 }
 void VulkanEngine::Run() {
   std::cout << "Run\n";
-  try {
-    while (!m_window.ShouldClose()) {
-      m_window.Tick();
-    }
-  } catch (const std::exception &e) {
-    std::cout << e.what() << std::endl;
-  }
-  m_window.Close();
+
+  std::atomic<bool> done = false;
+  std::thread render_thread(Spawn_Render_Thread, m_app.m_window, &done);
+  m_app.Run();
+  done = true;
+  render_thread.join();
 }
 void VulkanEngine::Cleanup() { std::cout << "Cleanup\n"; }
