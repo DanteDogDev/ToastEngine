@@ -1,4 +1,61 @@
 #include "vklog.hpp"
+#include "src/core/log.hpp"
+void LogQueues(const std::vector<vk::QueueFamilyProperties> &queueFamilies) {
+  // Log the number of available queue families based on ENGINE_DEBUG
+  ENGINE_DEBUG("There are {} queue families available on the system.", queueFamilies.size());
+
+  for (uint32_t i = 0; i < queueFamilies.size(); ++i) {
+    vk::QueueFamilyProperties queueFamily = queueFamilies[i];
+
+    ENGINE_DEBUG("Queue Family {}:", i);
+
+    std::string supportedQueues = "\tSupports ";
+
+    bool anyFlags = false;
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eCompute) {
+      supportedQueues += "compute, ";
+      anyFlags = true;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
+      supportedQueues += "graphics, ";
+      anyFlags = true;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eTransfer) {
+      supportedQueues += "transfer, ";
+      anyFlags = true;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eOpticalFlowNV) {
+      supportedQueues += "nvidia optical flow, ";
+      anyFlags = true;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eSparseBinding) {
+      supportedQueues += "sparse binding, ";
+      anyFlags = true;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eProtected) {
+      supportedQueues += "protected memory, ";
+      anyFlags = true;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eVideoDecodeKHR) {
+      supportedQueues += "video decode, ";
+      anyFlags = true;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eVideoEncodeKHR) {
+      supportedQueues += "video encode, ";
+      anyFlags = true;
+    }
+
+    // Remove the last comma and space if any flags were added
+    if (anyFlags) {
+      supportedQueues = supportedQueues.substr(0, supportedQueues.size() - 2);
+    }
+    supportedQueues += ".";
+
+    ENGINE_DEBUG("{}", supportedQueues);
+
+    ENGINE_DEBUG("\tFamily supports {} queues.", queueFamily.queueCount);
+  }
+}
 void LogList(const std::vector<const char *> &list) {
   for (const auto &item : list) {
     ENGINE_DEBUG("\t\"{}\"", item);

@@ -1,7 +1,4 @@
 #pragma once
-#include <deque>
-#include <functional>
-#include <vulkan/vulkan.hpp>
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;

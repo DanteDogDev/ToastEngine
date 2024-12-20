@@ -1,5 +1,4 @@
 #include "window.hpp"
-#include "log.hpp"
 namespace Engine::Core {
 
 Window::Window(int width, int height, std::string title) : m_width(width), m_height(height), m_title(title) {

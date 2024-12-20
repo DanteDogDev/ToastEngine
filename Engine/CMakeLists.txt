@@ -30,7 +30,10 @@ add_library(Toast_Engine SHARED
   vulkanEngine.cpp
 )
 
-target_precompile_headers(Toast_Engine PRIVATE vulkanEngine.hpp)
+target_precompile_headers(Toast_Engine PRIVATE defines.h)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(Toast_Engine PRIVATE -include defines.h)
+endif()
 
 
 # Include directories

@@ -1,8 +1,7 @@
 #include "device.hpp"
-#include "src/core/log.hpp"
+#include "instance.hpp"
 #include "vklog.hpp"
-#include <vector>
-
+#include <vulkan/vulkan_handles.hpp>
 bool Supports(const vk::PhysicalDevice &device, const char **ppRequestedExtensions, const u32 requestedExtensionCount) {
   ENGINE_DEBUG("Requested Physical Device Extensions");
   LogList(ppRequestedExtensions, requestedExtensionCount);
@@ -56,4 +55,64 @@ vk::PhysicalDevice ChoosePhysicalDevice(const vk::Instance &instance) {
   }
   ENGINE_CRITICAL("NO SUITABLE PHYSICAL DEVICE");
   return availableDevices[0];
+}
+
+u32 FindQueueFamilyIndex(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface, vk::QueueFlags queueType) {
+  ENGINE_DEBUG("Finding queue family index");
+  std::vector<vk::QueueFamilyProperties> queueFamilys = physicalDevice.getQueueFamilyProperties();
+  LogQueues(queueFamilys);
+  for (u32 i = 0; i < queueFamilys.size(); i++) {
+    vk::QueueFamilyProperties queueFamily = queueFamilys[i];
+    bool canPresent = false;
+    if (surface) {
+      if (physicalDevice.getSurfaceSupportKHR(i, surface)) {
+        canPresent = true;
+      }
+    } else {
+      canPresent = true;
+    }
+
+    bool supported = false;
+    // Queue Flags is a bitmask
+    if (queueFamily.queueFlags & queueType) {
+      supported = true;
+    }
+
+    if (supported && canPresent) {
+      return i;
+    }
+  }
+  return UINT32_MAX;
+}
+
+vk::Device CreateLogicalDevice(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface,
+                               std::deque<std::function<void(vk::Device)>> &deletionQueue) {
+  ENGINE_INFO("Creating Logical Device");
+  u32 graphicsIndex = FindQueueFamilyIndex(physicalDevice, surface, vk::QueueFlagBits::eGraphics);
+  float queuePriority = 1.0f;
+  vk::DeviceQueueCreateInfo queueInfo{};
+
+  queueInfo.flags = vk::DeviceQueueCreateFlags();
+  queueInfo.queueFamilyIndex = graphicsIndex;
+  queueInfo.queueCount = 1;
+  queueInfo.pQueuePriorities = &queuePriority;
+  queueInfo.pNext = nullptr;
+
+  vk::PhysicalDeviceFeatures deviceFeatures = vk::PhysicalDeviceFeatures();
+
+  vk::DeviceCreateInfo deviceInfo{};
+  deviceInfo.queueCreateInfoCount = 1;
+  deviceInfo.pQueueCreateInfos = &queueInfo;
+  deviceInfo.enabledLayerCount = validationLayers.size();
+  deviceInfo.ppEnabledLayerNames = validationLayers.data();
+  deviceInfo.enabledExtensionCount = 0;
+  deviceInfo.ppEnabledExtensionNames = nullptr;
+  deviceInfo.pEnabledFeatures = &deviceFeatures;
+
+  vk::Device logicalDevice = physicalDevice.createDevice(deviceInfo);
+  deletionQueue.push_back([](vk::Device device) {
+    device.destroy();
+    ENGINE_DEBUG("Deleted logical Device");
+  });
+  return logicalDevice;
 }

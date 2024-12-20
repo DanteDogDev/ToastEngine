@@ -1,8 +1,5 @@
 #include "instance.hpp"
-#include "defines.h"
-#include "src/core/log.hpp"
 #include "vklog.hpp"
-#include <GLFW/glfw3.h>
 
 bool SupportedByInstance(const char **extensionNames, int extensionCount, const char **layerNames, int layerCount) {
 
