@@ -1,16 +1,9 @@
 #include "window.hpp"
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 namespace Engine::Core {
 
-Window::Window(int width, int height, std::string title) : m_width(width), m_height(height), m_title(title) {}
-Window::~Window() {
-  spdlog::info("Window Deconstruct");
-  glfwDestroyWindow(m_window);
-  glfwTerminate();
-}
-
-void Window::Init() {
-  spdlog::info("Window Init");
+Window::Window(int width, int height, std::string title) : m_width(width), m_height(height), m_title(title) {
+  ENGINE_DEBUG("Window Init");
   glfwInit();
   // Sets default api to none otherwise it would have been set to OPENGL
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -18,6 +11,13 @@ void Window::Init() {
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), nullptr, nullptr);
 }
+Window::~Window() {
+  ENGINE_DEBUG("Window Close");
+  glfwDestroyWindow(m_window);
+  glfwTerminate();
+}
+
+void Window::Init() {}
 
 void Window::Tick() { glfwPollEvents(); }
 void Window::Run() {
@@ -26,7 +26,7 @@ void Window::Run() {
       Tick();
     }
   } catch (const std::exception &e) {
-    spdlog::error("Exception caught in Run(): {}", e.what());
+    ENGINE_ERROR("Exception caught in Run(): {}", e.what());
     Close();
     throw;
   }

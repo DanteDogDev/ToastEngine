@@ -1,3 +1,4 @@
+#include <cstdint>
 #pragma once
 // Unsigned int types.
 typedef uint8_t u8;
@@ -12,3 +13,9 @@ typedef int64_t i64;
 // Floating point types
 typedef float f32;
 typedef double f64;
+
+#ifdef TOAST_ENGINE_DLL
+#define ENGINE_API __declspec(dllexport)
+#else
+#define ENGINE_API __declspec(dllimport)
+#endif

@@ -1,11 +1,10 @@
 #include "renderer.hpp"
 #include "instance.hpp"
-#include <spdlog/spdlog.h>
+#include "src/core/log.hpp"
 namespace Engine::Vulkan {
 Renderer::Renderer() {
-  spdlog::info("Making Renderer");
+  ENGINE_INFO("Making Renderer");
   m_instance = MakeInstance("Vulkat Engine", m_deletionQueue);
-  spdlog::info("hi");
   // m_dldi = vk::DispatchLoaderDynamic(m_instance, vkGetInstanceProcAddr);
   m_dldi.init(m_instance, vkGetInstanceProcAddr);
   m_debugMessenger = MakeDebugMessenger(m_instance, m_dldi, m_deletionQueue);

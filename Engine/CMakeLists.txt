@@ -13,7 +13,7 @@ find_package(Threads REQUIRED)
 set(VULKAN_SDK "C:/VulkanSDK/1.3.296.0")
 
 # Define preprocessor macros
-add_compile_definitions(TOASTITO_PLATFORM_WINDOWS TOASTITO_ENGINE_DLL)
+add_compile_definitions(TOAST_PLATFORM_WINDOWS TOAST_ENGINE_DLL)
 
 # Find all files and add them to the library
 file(GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
