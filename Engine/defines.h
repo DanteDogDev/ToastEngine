@@ -1,5 +1,5 @@
-#include <cstdint>
 #pragma once
+#include <cstdint>
 // Unsigned int types.
 typedef uint8_t u8;
 typedef uint16_t u16;

@@ -1,3 +1,4 @@
+#pragma once
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
@@ -5,7 +6,6 @@ namespace Engine::Core {
 class Log {
 public:
   static void Init();
-  static void PrintList(const std::vector<const char *> &list);
   inline static std::shared_ptr<spdlog::logger> GetEngineLogger() { return m_engineLogger; }
 
 private:
