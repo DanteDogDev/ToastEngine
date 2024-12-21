@@ -1,118 +1,108 @@
 #include "device.hpp"
-#include "instance.hpp"
-#include "vklog.hpp"
+#include "src/core/log.hpp"
+#include "src/vulkan/vklog.hpp"
 #include "vulkanConfig.hpp"
-bool Supports(const vk::PhysicalDevice &device, const char **ppRequestedExtensions, const u32 requestedExtensionCount) {
-  ENGINE_DEBUG("Requested Physical Device Extensions");
-  LogList(ppRequestedExtensions, requestedExtensionCount);
+using namespace Engine::Vulkan;
+void DeviceManager::Init(vk::Instance intance, vk::SurfaceKHR surface) {
+  ENGINE_INFO("Creating Devices Object")
+  m_instance = intance;
+  m_surface = surface;
+  ChoosePhysicalDevice();
+  FindQueueFamily();
+  CreateLogicalDevice();
+}
+DeviceManager::~DeviceManager() {
+  ENGINE_INFO("Deleting Devices Object");
+  while (m_deviceDeletionQueue.size() > 0) {
+    m_deviceDeletionQueue.back()(m_logicalDevice);
+    m_deviceDeletionQueue.pop_back();
+  }
+}
 
-  std::vector<vk::ExtensionProperties> extensions = device.enumerateDeviceExtensionProperties();
-  ENGINE_DEBUG("Physical Device supported extensions");
-  LogList(extensions);
+bool DeviceManager::IsDeviceSuitable(vk::PhysicalDevice device) {
+  ENGINE_DEBUG("Checking if Device is suitable: {}", device.getProperties().deviceName.data());
 
-  for (u32 i = 0; i < requestedExtensionCount; ++i) {
-    bool supported = false;
+  ENGINE_DEBUG("Physical Device Extensions to be requested");
+  LogList(VulkanConfig::physicalDeviceExtensions);
+  ENGINE_DEBUG("Physical Device can support these Extensions")
+  std::vector<vk::ExtensionProperties> supportedExtensions = device.enumerateDeviceExtensionProperties();
+  LogList(supportedExtensions);
 
-    for (vk::ExtensionProperties &extension : extensions) {
-      std::string name = extension.extensionName;
-      if (!name.compare(ppRequestedExtensions[i])) {
-        supported = true;
+  for (const char *request : VulkanConfig::physicalDeviceExtensions) {
+    bool found = false;
+    for (const auto &support : supportedExtensions) {
+      if (strcmp(support.extensionName, request) == 0) {
+        ENGINE_DEBUG("Extension \"{}\" Supported", request);
+        found = true;
         break;
       }
     }
-    if (!supported) {
-      ENGINE_DEBUG("Device not supported:{}", device.getProperties().deviceName.data());
-      return false;
+    if (!found) {
+      ENGINE_WARN("Extension \"{}\" Not Supported", request);
     }
-  }
-
-  return true;
-}
-
-bool IsSuitable(const vk::PhysicalDevice &device) {
-  ENGINE_DEBUG("Checking if Device is suitable");
-  // Requested Extensions
-  const char *ppRequestedExtension = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-
-  if (Supports(device, &ppRequestedExtension, 1)) {
-    ENGINE_DEBUG("Device can support the requested extensions!");
-  } else {
-    ENGINE_DEBUG("Device can't support the requested extensions!");
-    return false;
   }
   return true;
 }
-
-vk::PhysicalDevice ChoosePhysicalDevice(const vk::Instance &instance) {
-  ENGINE_INFO("Choosing Physical Device");
-  std::vector<vk::PhysicalDevice> availableDevices = instance.enumeratePhysicalDevices();
-  for (vk::PhysicalDevice device : availableDevices) {
-
-    if (IsSuitable(device)) {
-      ENGINE_INFO("Chosen Device:{}", device.getProperties().deviceName.data());
-      return device;
-    }
-  }
-  ENGINE_CRITICAL("NO SUITABLE PHYSICAL DEVICE");
-  return availableDevices[0];
-}
-
-u32 FindQueueFamilyIndex(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface, vk::QueueFlags queueType) {
-  ENGINE_DEBUG("Finding queue family index");
-  std::vector<vk::QueueFamilyProperties> queueFamilys = physicalDevice.getQueueFamilyProperties();
-  LogQueues(queueFamilys);
-  for (u32 i = 0; i < queueFamilys.size(); i++) {
-    vk::QueueFamilyProperties queueFamily = queueFamilys[i];
-    bool canPresent = false;
-    if (surface) {
-      if (physicalDevice.getSurfaceSupportKHR(i, surface)) {
-        canPresent = true;
+void DeviceManager::ChoosePhysicalDevice() {
+  ENGINE_DEBUG("Choosing Physical Device");
+  std::vector<vk::PhysicalDevice> devices = m_instance.enumeratePhysicalDevices();
+  std::vector<vk::PhysicalDeviceType> types = {vk::PhysicalDeviceType::eDiscreteGpu, vk::PhysicalDeviceType::eIntegratedGpu,
+                                               vk::PhysicalDeviceType::eVirtualGpu, vk::PhysicalDeviceType::eCpu, vk::PhysicalDeviceType::eOther};
+  for (const auto &type : types) {
+    for (const auto &device : devices) {
+      auto properties = device.getProperties();
+      if (properties.deviceType == type && IsDeviceSuitable(device)) {
+        ENGINE_INFO("Chosen Device:{}", device.getProperties().deviceName.data());
+        m_physicalDevice = device;
+        return;
       }
-    } else {
-      canPresent = true;
-    }
-
-    bool supported = false;
-    // Queue Flags is a bitmask
-    if (queueFamily.queueFlags & queueType) {
-      supported = true;
-    }
-
-    if (supported && canPresent) {
-      return i;
     }
   }
-  return UINT32_MAX;
+  ENGINE_CRITICAL("NO SUITABLE PHYSICAL DEVICE FOUND");
 }
 
-vk::Device CreateLogicalDevice(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface,
-                               std::deque<std::function<void(vk::Device)>> &deletionQueue) {
-  ENGINE_INFO("Creating Logical Device");
-  u32 graphicsIndex = FindQueueFamilyIndex(physicalDevice, surface, vk::QueueFlagBits::eGraphics);
-  float queuePriority = 1.0f;
-  vk::DeviceQueueCreateInfo queueInfo{};
+void DeviceManager::FindQueueFamily() {
+  ENGINE_DEBUG("Finding Queue Familys");
+  std::vector<vk::QueueFamilyProperties> queueFamilys = m_physicalDevice.getQueueFamilyProperties();
+  LogQueues(queueFamilys);
+  m_queueFamilyIndices = {UINT32_MAX, UINT32_MAX};
+  int i = 0;
+  for (const auto &queueFamily : queueFamilys) {
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
+      ENGINE_DEBUG("Found eGraphics queue");
+      m_queueFamilyIndices.graphicsFamily = i;
+    }
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eCompute) {
+      ENGINE_DEBUG("Found eCompute queue");
+      m_queueFamilyIndices.computeFamily = i;
+    }
+    i++;
+  }
+}
 
+void DeviceManager::CreateLogicalDevice() {
+  ENGINE_INFO("Creating Logical Device");
+
+  vk::DeviceQueueCreateInfo queueInfo{};
   queueInfo.flags = vk::DeviceQueueCreateFlags();
-  queueInfo.queueFamilyIndex = graphicsIndex;
+  queueInfo.queueFamilyIndex = m_queueFamilyIndices.graphicsFamily;
   queueInfo.queueCount = 1;
+  float queuePriority = 1.0f;
   queueInfo.pQueuePriorities = &queuePriority;
-  queueInfo.pNext = nullptr;
 
   vk::PhysicalDeviceFeatures deviceFeatures = vk::PhysicalDeviceFeatures();
 
   vk::DeviceCreateInfo deviceInfo{};
-  deviceInfo.queueCreateInfoCount = 1;
   deviceInfo.pQueueCreateInfos = &queueInfo;
-  deviceInfo.enabledLayerCount = VulkanConfig::instanceLayers.size();
-  deviceInfo.ppEnabledLayerNames = VulkanConfig::instanceLayers.data();
+  deviceInfo.queueCreateInfoCount = 1;
+  deviceInfo.pEnabledFeatures = &deviceFeatures;
   deviceInfo.enabledExtensionCount = 0;
   deviceInfo.ppEnabledExtensionNames = nullptr;
-  deviceInfo.pEnabledFeatures = &deviceFeatures;
 
-  vk::Device logicalDevice = physicalDevice.createDevice(deviceInfo);
-  deletionQueue.push_back([](vk::Device device) {
+  vk::Device logicalDevice = m_physicalDevice.createDevice(deviceInfo);
+  m_deviceDeletionQueue.push_back([](vk::Device device) {
     device.destroy();
     ENGINE_DEBUG("Deleted logical Device");
   });
-  return logicalDevice;
+  m_logicalDevice = logicalDevice;
 }

@@ -4,7 +4,7 @@
 #include "vulkanConfig.hpp"
 using namespace Engine::Vulkan;
 
-Instance::Instance() {
+void InstanceManager::Init() {
   ENGINE_INFO("Creating Instance Object");
   AddRequiredExtensions();
   SupportedByInstance();
@@ -13,7 +13,7 @@ Instance::Instance() {
   m_dldi.init(m_instance, vkGetInstanceProcAddr);
   MakeDebugMessenger();
 }
-Instance::~Instance() {
+InstanceManager::~InstanceManager() {
   ENGINE_INFO("Deleting Instance Object");
   while (m_instanceDeletionQueue.size() > 0) {
     m_instanceDeletionQueue.back()(m_instance);
@@ -21,7 +21,7 @@ Instance::~Instance() {
   }
 }
 
-void Instance::MakeInstance(const char *appName) {
+void InstanceManager::MakeInstance(const char *appName) {
   ENGINE_INFO("Making Instance!");
 
   // Application Info
@@ -55,7 +55,7 @@ void Instance::MakeInstance(const char *appName) {
   });
 }
 
-void Instance::AddRequiredExtensions() {
+void InstanceManager::AddRequiredExtensions() {
   uint32_t glfwExtensionCount = 0;
   const char **glfwExtensions;
   glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -64,7 +64,7 @@ void Instance::AddRequiredExtensions() {
   }
 }
 
-void Instance::SupportedByInstance() {
+void InstanceManager::SupportedByInstance() {
   ENGINE_DEBUG("Extensions to be requested");
   LogList(VulkanConfig::instanceExtensions);
   std::vector<vk::ExtensionProperties> supportedExtensions = vk::enumerateInstanceExtensionProperties();
@@ -103,7 +103,7 @@ void Instance::SupportedByInstance() {
     }
   }
 }
-vk::SurfaceKHR Instance::MakeSurface(GLFWwindow *window) {
+vk::SurfaceKHR InstanceManager::MakeSurface(GLFWwindow *window) {
   VkSurfaceKHR rawSurface;
   glfwCreateWindowSurface(m_instance, window, nullptr, &rawSurface);
   m_instanceDeletionQueue.push_back([rawSurface](vk::Instance instance) {
@@ -133,7 +133,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(                  //
   return VK_FALSE;
 }
 
-void Instance::MakeDebugMessenger() {
+void InstanceManager::MakeDebugMessenger() {
   vk::DebugUtilsMessengerCreateInfoEXT createInfo{};
   createInfo.flags = vk::DebugUtilsMessengerCreateFlagBitsEXT();
   createInfo.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |

@@ -1,8 +1,8 @@
 namespace Engine::Vulkan {
-class Instance {
+class InstanceManager {
 public:
-  Instance();
-  ~Instance();
+  void Init();
+  ~InstanceManager();
 
   vk::SurfaceKHR MakeSurface(GLFWwindow *window);
 
