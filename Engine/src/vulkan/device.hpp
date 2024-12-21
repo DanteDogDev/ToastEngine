@@ -14,8 +14,9 @@ private:
   std::deque<std::function<void(vk::Device)>> m_deviceDeletionQueue;
 
   struct {
-    u32 graphicsFamily;
-    u32 computeFamily;
+    std::vector<u32> graphicsFamilies;
+    std::vector<u32> computeFamilies;
+    std::vector<u32> presentFamilies;
   } m_queueFamilyIndices;
 
   void ChoosePhysicalDevice();

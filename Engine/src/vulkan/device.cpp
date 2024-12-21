@@ -65,16 +65,19 @@ void DeviceManager::FindQueueFamily() {
   ENGINE_DEBUG("Finding Queue Familys");
   std::vector<vk::QueueFamilyProperties> queueFamilys = m_physicalDevice.getQueueFamilyProperties();
   LogQueues(queueFamilys);
-  m_queueFamilyIndices = {UINT32_MAX, UINT32_MAX};
   int i = 0;
   for (const auto &queueFamily : queueFamilys) {
     if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
       ENGINE_DEBUG("Found eGraphics queue");
-      m_queueFamilyIndices.graphicsFamily = i;
+      m_queueFamilyIndices.graphicsFamilies.push_back(i);
     }
     if (queueFamily.queueFlags & vk::QueueFlagBits::eCompute) {
       ENGINE_DEBUG("Found eCompute queue");
-      m_queueFamilyIndices.computeFamily = i;
+      m_queueFamilyIndices.computeFamilies.push_back(i);
+    }
+    if (m_physicalDevice.getSurfaceSupportKHR(i, m_surface)) {
+      ENGINE_DEBUG("Found surface queue");
+      m_queueFamilyIndices.computeFamilies.push_back(i);
     }
     i++;
   }
@@ -85,7 +88,7 @@ void DeviceManager::CreateLogicalDevice() {
 
   vk::DeviceQueueCreateInfo queueInfo{};
   queueInfo.flags = vk::DeviceQueueCreateFlags();
-  queueInfo.queueFamilyIndex = m_queueFamilyIndices.graphicsFamily;
+  queueInfo.queueFamilyIndex = m_queueFamilyIndices.graphicsFamilies[0];
   queueInfo.queueCount = 1;
   float queuePriority = 1.0f;
   queueInfo.pQueuePriorities = &queuePriority;
