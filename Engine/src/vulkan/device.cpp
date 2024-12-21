@@ -1,14 +1,14 @@
 #include "device.hpp"
 #include "instance.hpp"
 #include "vklog.hpp"
-#include <vulkan/vulkan_handles.hpp>
+#include "vulkanConfig.hpp"
 bool Supports(const vk::PhysicalDevice &device, const char **ppRequestedExtensions, const u32 requestedExtensionCount) {
   ENGINE_DEBUG("Requested Physical Device Extensions");
   LogList(ppRequestedExtensions, requestedExtensionCount);
 
   std::vector<vk::ExtensionProperties> extensions = device.enumerateDeviceExtensionProperties();
   ENGINE_DEBUG("Physical Device supported extensions");
-  LogExtensions(extensions);
+  LogList(extensions);
 
   for (u32 i = 0; i < requestedExtensionCount; ++i) {
     bool supported = false;
@@ -103,8 +103,8 @@ vk::Device CreateLogicalDevice(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR
   vk::DeviceCreateInfo deviceInfo{};
   deviceInfo.queueCreateInfoCount = 1;
   deviceInfo.pQueueCreateInfos = &queueInfo;
-  deviceInfo.enabledLayerCount = validationLayers.size();
-  deviceInfo.ppEnabledLayerNames = validationLayers.data();
+  deviceInfo.enabledLayerCount = VulkanConfig::instanceLayers.size();
+  deviceInfo.ppEnabledLayerNames = VulkanConfig::instanceLayers.data();
   deviceInfo.enabledExtensionCount = 0;
   deviceInfo.ppEnabledExtensionNames = nullptr;
   deviceInfo.pEnabledFeatures = &deviceFeatures;

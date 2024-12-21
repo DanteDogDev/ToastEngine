@@ -1,157 +1,125 @@
 #include "instance.hpp"
+#include "src/core/log.hpp"
 #include "vklog.hpp"
+#include "vulkanConfig.hpp"
+using namespace Engine::Vulkan;
 
-bool SupportedByInstance(const char **extensionNames, int extensionCount, const char **layerNames, int layerCount) {
+Instance::Instance() {
+  ENGINE_INFO("Creating Instance Object");
+  AddRequiredExtensions();
+  SupportedByInstance();
+  MakeInstance("Vulkat Engine");
 
-  std::stringstream lineBuilder;
-
-  // check extension support
-  std::vector<vk::ExtensionProperties> supportedExtensions = vk::enumerateInstanceExtensionProperties();
-
-  ENGINE_DEBUG("Instance can support the following extensions:");
-  LogExtensions(supportedExtensions);
-
-  bool found;
-  for (int i = 0; i < extensionCount; ++i) {
-    const char *extension = extensionNames[i];
-    found = false;
-    for (vk::ExtensionProperties supportedExtension : supportedExtensions) {
-      if (strcmp(extension, supportedExtension.extensionName) == 0) {
-        found = true;
-        lineBuilder << "Extension \"" << extension << "\" is supported!";
-        ENGINE_DEBUG(lineBuilder.str());
-        lineBuilder.str("");
-        break;
-      }
-    }
-    if (!found) {
-      lineBuilder << "Extension \"" << extension << "\" is not supported!";
-      ENGINE_DEBUG(lineBuilder.str());
-      return false;
-    }
+  m_dldi.init(m_instance, vkGetInstanceProcAddr);
+  MakeDebugMessenger();
+}
+Instance::~Instance() {
+  ENGINE_INFO("Deleting Instance Object");
+  while (m_instanceDeletionQueue.size() > 0) {
+    m_instanceDeletionQueue.back()(m_instance);
+    m_instanceDeletionQueue.pop_back();
   }
-
-  // check layer support
-  std::vector<vk::LayerProperties> supportedLayers = vk::enumerateInstanceLayerProperties();
-
-  ENGINE_DEBUG("Instance can support the following layers:");
-  LogLayers(supportedLayers);
-
-  for (int i = 0; i < layerCount; ++i) {
-    const char *layer = layerNames[i];
-    found = false;
-    for (vk::LayerProperties supportedLayer : supportedLayers) {
-      if (strcmp(layer, supportedLayer.layerName) == 0) {
-        found = true;
-        lineBuilder << "Layer \"" << layer << "\" is supported!";
-        ENGINE_DEBUG(lineBuilder.str());
-        lineBuilder.str("");
-        break;
-      }
-    }
-    if (!found) {
-      lineBuilder << "Layer \"" << layer << "\" is not supported!";
-      ENGINE_DEBUG(lineBuilder.str());
-      lineBuilder.str("");
-      // return false;
-    }
-  }
-
-  return true;
 }
 
-bool checkValidationLayerSupport() {
-  uint32_t layerCount;
-  vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-  std::vector<VkLayerProperties> availableLayers(layerCount);
-  vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-  for (const char *layerName : validationLayers) {
-    bool layerFound = false;
-    for (const auto &layerProperties : availableLayers) {
-      if (strcmp(layerName, layerProperties.layerName) == 0) {
-        layerFound = true;
-        break;
-      }
-    }
-    if (!layerFound) {
-      ENGINE_ERROR("Validation layer '{}' is not supported.", layerName);
-      return false;
-    }
-  }
-
-  return true;
-}
-std::vector<const char *> getRequiredExtensions() {
-  uint32_t glfwExtensionCount = 0;
-  const char **glfwExtensions;
-  glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-  std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-  if (enableValidationLayers) {
-    extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-  }
-  ENGINE_DEBUG("extensions to be requested:");
-  LogList(extensions);
-
-  return extensions;
-}
-vk::Instance MakeInstance(const char *applicationName, std::deque<std::function<void(vk::Instance)>> &deletionQueue) {
+void Instance::MakeInstance(const char *appName) {
   ENGINE_INFO("Making Instance!");
-
-  if (enableValidationLayers && !checkValidationLayerSupport()) {
-    ENGINE_CRITICAL("Validation layers requested, but not available!");
-  }
 
   // Application Info
   u32 version = vk::enumerateInstanceVersion();
-  ReportVersionNumber(version);
+  LogVersion(version);
   vk::ApplicationInfo appInfo;
-  appInfo.pApplicationName = applicationName;
+  appInfo.pApplicationName = appName;
   appInfo.applicationVersion = version;
   appInfo.pEngineName = "Vulkat Engine";
   appInfo.engineVersion = version;
   appInfo.apiVersion = version;
 
-  // Extensions
-  auto extensions = getRequiredExtensions();
-  u32 enabledExtensionCount = static_cast<u32>(extensions.size());
-  const char **ppEnabledExtensionNames = extensions.data();
-  // Layers
-  if (!SupportedByInstance(ppEnabledExtensionNames, enabledExtensionCount, (const char **)validationLayers.data(), validationLayers.size())) {
-    ENGINE_CRITICAL("Required instance extensions are not supported!");
-  }
   // Instance Creation Info
   vk::InstanceCreateInfo createInfo;
   createInfo.flags = vk::InstanceCreateFlags();
   createInfo.pApplicationInfo = &appInfo;
-  createInfo.enabledLayerCount = validationLayers.size();
-  createInfo.ppEnabledLayerNames = validationLayers.data();
-  createInfo.enabledExtensionCount = enabledExtensionCount;
-  createInfo.ppEnabledExtensionNames = ppEnabledExtensionNames;
+  createInfo.ppEnabledLayerNames = VulkanConfig::instanceLayers.data();
+  createInfo.enabledLayerCount = VulkanConfig::instanceLayers.size();
+  createInfo.ppEnabledExtensionNames = VulkanConfig::instanceExtensions.data();
+  createInfo.enabledExtensionCount = VulkanConfig::instanceExtensions.size();
 
-  vk::Instance instance;
   try {
-    instance = vk::createInstance(createInfo);
+    m_instance = vk::createInstance(createInfo);
   } catch (const vk::SystemError &err) {
     ENGINE_CRITICAL("Failed to create Vulkan instance: {}", err.what());
   }
 
-  deletionQueue.push_back([](vk::Instance instance) {
+  m_instanceDeletionQueue.push_back([](vk::Instance instance) {
     instance.destroy();
     ENGINE_DEBUG("Deleting Instance");
   });
-
-  return instance;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(                  //
+void Instance::AddRequiredExtensions() {
+  uint32_t glfwExtensionCount = 0;
+  const char **glfwExtensions;
+  glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+  for (u32 i = 0; i < glfwExtensionCount; i++) {
+    VulkanConfig::instanceExtensions.push_back(glfwExtensions[i]);
+  }
+}
+
+void Instance::SupportedByInstance() {
+  ENGINE_DEBUG("Extensions to be requested");
+  LogList(VulkanConfig::instanceExtensions);
+  std::vector<vk::ExtensionProperties> supportedExtensions = vk::enumerateInstanceExtensionProperties();
+  ENGINE_DEBUG("Instance can support these Extensions")
+  LogList(supportedExtensions);
+  for (const char *request : VulkanConfig::instanceExtensions) {
+    bool found = false;
+    for (const auto &support : supportedExtensions) {
+      if (strcmp(support.extensionName, request) == 0) {
+        ENGINE_DEBUG("Extension \"{}\" Supported", request);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      ENGINE_CRITICAL("Extension \"{}\" Not Supported", request);
+    }
+  }
+
+  ENGINE_DEBUG("Layers to be requested");
+  LogList(VulkanConfig::instanceExtensions);
+  ENGINE_DEBUG("Instance can support these Layers")
+  std::vector<vk::LayerProperties> supportedLayers = vk::enumerateInstanceLayerProperties();
+  LogList(supportedLayers);
+  for (const char *request : VulkanConfig::instanceLayers) {
+    bool found = false;
+    for (const auto &support : supportedLayers) {
+      if (strcmp(support.layerName, request) == 0) {
+        ENGINE_DEBUG("Layer \"{}\" Supported", request);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      ENGINE_CRITICAL("Layer \"{}\" Not Supported", request);
+    }
+  }
+}
+vk::SurfaceKHR Instance::MakeSurface(GLFWwindow *window) {
+  VkSurfaceKHR rawSurface;
+  glfwCreateWindowSurface(m_instance, window, nullptr, &rawSurface);
+  m_instanceDeletionQueue.push_back([rawSurface](vk::Instance instance) {
+    instance.destroySurfaceKHR(rawSurface, nullptr);
+    ENGINE_DEBUG("Destroyed Surface");
+  });
+  return (vk::SurfaceKHR)rawSurface;
+}
+// DEBUG MESSENGER
+VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(                  //
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,    //
     VkDebugUtilsMessageTypeFlagsEXT messageType,               //
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, //
     void *pUserData) {
+  (void)messageType;
+  (void)pUserData;
   if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
     ENGINE_ERROR("Validation layer: {}", pCallbackData->pMessage);
   } else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
@@ -165,23 +133,22 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(                  //
   return VK_FALSE;
 }
 
-vk::DebugUtilsMessengerEXT MakeDebugMessenger(vk::Instance &instance, vk::DispatchLoaderDynamic &dldi,
-                                              std::deque<std::function<void(vk::Instance)>> &deletionQueue) {
+void Instance::MakeDebugMessenger() {
   vk::DebugUtilsMessengerCreateInfoEXT createInfo{};
   createInfo.flags = vk::DebugUtilsMessengerCreateFlagBitsEXT();
   createInfo.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
                                vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
   createInfo.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
                            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
-  createInfo.pfnUserCallback = debugCallback;
+  createInfo.pfnUserCallback = DebugCallback;
   createInfo.pUserData = nullptr;
 
-  vk::DebugUtilsMessengerEXT messenger = instance.createDebugUtilsMessengerEXT(createInfo, nullptr, dldi);
+  vk::DebugUtilsMessengerEXT messenger = m_instance.createDebugUtilsMessengerEXT(createInfo, nullptr, m_dldi);
   VkDebugUtilsMessengerEXT handle = messenger;
-  deletionQueue.push_back([handle, dldi](vk::Instance instance) {
-    instance.destroyDebugUtilsMessengerEXT(handle, nullptr, dldi);
+
+  m_instanceDeletionQueue.push_back([handle, this](vk::Instance instance) {
+    instance.destroyDebugUtilsMessengerEXT(handle, nullptr, m_dldi);
     ENGINE_DEBUG("Deleted Debug Messenger");
   });
-
-  return messenger;
+  m_debugMessenger = messenger;
 }

@@ -56,27 +56,28 @@ void LogQueues(const std::vector<vk::QueueFamilyProperties> &queueFamilies) {
     ENGINE_DEBUG("\tFamily supports {} queues.", queueFamily.queueCount);
   }
 }
-void LogList(const std::vector<const char *> &list) {
-  for (const auto &item : list) {
-    ENGINE_DEBUG("\t\"{}\"", item);
-  }
-}
 void LogList(const char **list, u32 size) {
   for (u32 i = 0; i < size; i++) {
     ENGINE_DEBUG("\t\"{}\"", list[i]);
   }
 }
-void LogExtensions(std::vector<vk::ExtensionProperties> &extensions) {
+void LogList(std::vector<vk::ExtensionProperties> &extensions) {
   for (const vk::ExtensionProperties &extension : extensions) {
     ENGINE_DEBUG("\t\'{}\'", std::string(extension.extensionName.data()));
   }
 }
-void LogLayers(std::vector<vk::LayerProperties> &layers) {
+void LogList(std::vector<vk::LayerProperties> &layers) {
   for (const vk::LayerProperties &layer : layers) {
     ENGINE_DEBUG("\t\'{}\'", std::string(layer.layerName.data()));
   }
 }
-void ReportVersionNumber(u32 version) {
+// FINAL LOGGING METHODS
+void LogList(const std::vector<const char *> &list) {
+  for (const char *token : list) {
+    ENGINE_DEBUG("\t{}", token);
+  }
+}
+void LogVersion(u32 version) {
   ENGINE_DEBUG(                                                                 //
       "System can support Vulkan Variant: {}, Major: {}, Minor: {}, Patch: {}", //
       vk::apiVersionVariant(version),                                           //
@@ -84,4 +85,14 @@ void ReportVersionNumber(u32 version) {
       vk::apiVersionMinor(version),                                             //
       vk::apiVersionPatch(version)                                              //
   );
+}
+void Log(std::vector<vk::ExtensionProperties> &extensions) {
+  for (const vk::ExtensionProperties &extension : extensions) {
+    ENGINE_DEBUG("\t{}", std::string(extension.extensionName.data()));
+  }
+}
+void Log(std::vector<vk::LayerProperties> &layers) {
+  for (const vk::LayerProperties &layer : layers) {
+    ENGINE_DEBUG("\t{}", std::string(layer.layerName.data()));
+  }
 }
