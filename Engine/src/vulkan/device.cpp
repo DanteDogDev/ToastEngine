@@ -1,16 +1,14 @@
 #include "device.hpp"
-#include "src/core/log.hpp"
 #include "src/vulkan/vklog.hpp"
 #include "vulkanConfig.hpp"
 using namespace Engine::Vulkan;
-void DeviceManager::Init(vk::Instance intance, vk::SurfaceKHR surface) {
+void DeviceManager::Init(vk::Instance instance, vk::SurfaceKHR surface) {
   ENGINE_INFO("Creating Devices Object")
-  m_instance = intance;
-  m_surface = surface;
-  ChoosePhysicalDevice();
-  FindQueueFamily();
-  CreateLogicalDevice();
+  m_physicalDevice = ChoosePhysicalDevice(instance);
+  m_queueFamilyIndices = FindQueueFamily(surface);
+  m_logicalDevice = CreateLogicalDevice();
 }
+
 DeviceManager::~DeviceManager() {
   ENGINE_INFO("Deleting Devices Object");
   while (m_deviceDeletionQueue.size() > 0) {
@@ -43,9 +41,10 @@ bool DeviceManager::IsDeviceSuitable(vk::PhysicalDevice device) {
   }
   return true;
 }
-void DeviceManager::ChoosePhysicalDevice() {
+
+vk::PhysicalDevice DeviceManager::ChoosePhysicalDevice(vk::Instance instance) {
   ENGINE_DEBUG("Choosing Physical Device");
-  std::vector<vk::PhysicalDevice> devices = m_instance.enumeratePhysicalDevices();
+  std::vector<vk::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
   std::vector<vk::PhysicalDeviceType> types = {vk::PhysicalDeviceType::eDiscreteGpu, vk::PhysicalDeviceType::eIntegratedGpu,
                                                vk::PhysicalDeviceType::eVirtualGpu, vk::PhysicalDeviceType::eCpu, vk::PhysicalDeviceType::eOther};
   for (const auto &type : types) {
@@ -53,37 +52,38 @@ void DeviceManager::ChoosePhysicalDevice() {
       auto properties = device.getProperties();
       if (properties.deviceType == type && IsDeviceSuitable(device)) {
         ENGINE_INFO("Chosen Device:{}", device.getProperties().deviceName.data());
-        m_physicalDevice = device;
-        return;
+        return device;
       }
     }
   }
   ENGINE_CRITICAL("NO SUITABLE PHYSICAL DEVICE FOUND");
 }
 
-void DeviceManager::FindQueueFamily() {
+QueueFamilyIndices DeviceManager::FindQueueFamily(vk::SurfaceKHR surface) {
   ENGINE_DEBUG("Finding Queue Familys");
   std::vector<vk::QueueFamilyProperties> queueFamilys = m_physicalDevice.getQueueFamilyProperties();
   LogQueues(queueFamilys);
+  QueueFamilyIndices queueFamilyIndices;
   int i = 0;
   for (const auto &queueFamily : queueFamilys) {
     if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
       ENGINE_DEBUG("Found eGraphics queue");
-      m_queueFamilyIndices.graphicsFamilies.push_back(i);
+      queueFamilyIndices.graphicsFamilies.push_back(i);
     }
     if (queueFamily.queueFlags & vk::QueueFlagBits::eCompute) {
       ENGINE_DEBUG("Found eCompute queue");
-      m_queueFamilyIndices.computeFamilies.push_back(i);
+      queueFamilyIndices.computeFamilies.push_back(i);
     }
-    if (m_physicalDevice.getSurfaceSupportKHR(i, m_surface)) {
+    if (m_physicalDevice.getSurfaceSupportKHR(i, surface)) {
       ENGINE_DEBUG("Found surface queue");
-      m_queueFamilyIndices.computeFamilies.push_back(i);
+      queueFamilyIndices.presentFamilies.push_back(i);
     }
     i++;
   }
+  return queueFamilyIndices;
 }
 
-void DeviceManager::CreateLogicalDevice() {
+vk::Device DeviceManager::CreateLogicalDevice() {
   ENGINE_INFO("Creating Logical Device");
 
   vk::DeviceQueueCreateInfo queueInfo{};
@@ -99,13 +99,18 @@ void DeviceManager::CreateLogicalDevice() {
   deviceInfo.pQueueCreateInfos = &queueInfo;
   deviceInfo.queueCreateInfoCount = 1;
   deviceInfo.pEnabledFeatures = &deviceFeatures;
-  deviceInfo.enabledExtensionCount = 0;
-  deviceInfo.ppEnabledExtensionNames = nullptr;
+  deviceInfo.enabledExtensionCount = (u32)VulkanConfig::physicalDeviceExtensions.size();
+  deviceInfo.ppEnabledExtensionNames = VulkanConfig::physicalDeviceExtensions.data();
 
-  vk::Device logicalDevice = m_physicalDevice.createDevice(deviceInfo);
+  vk::Device logicalDevice;
+  try {
+    logicalDevice = m_physicalDevice.createDevice(deviceInfo);
+  } catch (const std::exception &e) {
+    ENGINE_CRITICAL("Failed to create Logical Device:{}", e.what());
+  }
   m_deviceDeletionQueue.push_back([](vk::Device device) {
     device.destroy();
     ENGINE_DEBUG("Deleted logical Device");
   });
-  m_logicalDevice = logicalDevice;
+  return logicalDevice;
 }

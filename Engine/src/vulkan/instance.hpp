@@ -1,3 +1,4 @@
+#pragma once
 namespace Engine::Vulkan {
 class InstanceManager {
 public:
@@ -13,7 +14,7 @@ private:
   vk::DispatchLoaderDynamic m_dldi;
   vk::DebugUtilsMessengerEXT m_debugMessenger;
 
-  void MakeInstance(const char *appName);
+  vk::Instance MakeInstance(const char *appName);
   void AddRequiredExtensions();
   void SupportedByInstance();
 

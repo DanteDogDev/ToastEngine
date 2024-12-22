@@ -30,6 +30,10 @@ add_library(Toast_Engine SHARED
   vulkanEngine.cpp
 )
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_definitions(Toast_Engine PRIVATE DEBUG)
+endif()
+
 target_precompile_headers(Toast_Engine PRIVATE defines.h)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(Toast_Engine PRIVATE -include defines.h)

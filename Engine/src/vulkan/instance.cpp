@@ -8,11 +8,13 @@ void InstanceManager::Init() {
   ENGINE_INFO("Creating Instance Object");
   AddRequiredExtensions();
   SupportedByInstance();
-  MakeInstance("Vulkat Engine");
-
+  m_instance = MakeInstance("Vulkat Engine");
+#ifdef DEBUG
   m_dldi.init(m_instance, vkGetInstanceProcAddr);
   MakeDebugMessenger();
+#endif
 }
+
 InstanceManager::~InstanceManager() {
   ENGINE_INFO("Deleting Instance Object");
   while (m_instanceDeletionQueue.size() > 0) {
@@ -21,7 +23,7 @@ InstanceManager::~InstanceManager() {
   }
 }
 
-void InstanceManager::MakeInstance(const char *appName) {
+vk::Instance InstanceManager::MakeInstance(const char *appName) {
   ENGINE_INFO("Making Instance!");
 
   // Application Info
@@ -38,13 +40,13 @@ void InstanceManager::MakeInstance(const char *appName) {
   vk::InstanceCreateInfo createInfo;
   createInfo.flags = vk::InstanceCreateFlags();
   createInfo.pApplicationInfo = &appInfo;
+  createInfo.enabledLayerCount = (u32)VulkanConfig::instanceLayers.size();
   createInfo.ppEnabledLayerNames = VulkanConfig::instanceLayers.data();
-  createInfo.enabledLayerCount = VulkanConfig::instanceLayers.size();
+  createInfo.enabledExtensionCount = (u32)VulkanConfig::instanceExtensions.size();
   createInfo.ppEnabledExtensionNames = VulkanConfig::instanceExtensions.data();
-  createInfo.enabledExtensionCount = VulkanConfig::instanceExtensions.size();
-
+  vk::Instance instance;
   try {
-    m_instance = vk::createInstance(createInfo);
+    instance = vk::createInstance(createInfo);
   } catch (const vk::SystemError &err) {
     ENGINE_CRITICAL("Failed to create Vulkan instance: {}", err.what());
   }
@@ -53,6 +55,7 @@ void InstanceManager::MakeInstance(const char *appName) {
     instance.destroy();
     ENGINE_DEBUG("Deleting Instance");
   });
+  return instance;
 }
 
 void InstanceManager::AddRequiredExtensions() {
@@ -103,16 +106,21 @@ void InstanceManager::SupportedByInstance() {
     }
   }
 }
+
 vk::SurfaceKHR InstanceManager::MakeSurface(GLFWwindow *window) {
   VkSurfaceKHR rawSurface;
-  glfwCreateWindowSurface(m_instance, window, nullptr, &rawSurface);
+  try {
+    glfwCreateWindowSurface(m_instance, window, nullptr, &rawSurface);
+  } catch (const std::exception &e) {
+    ENGINE_CRITICAL("Failed to create :Surface{}", e.what());
+  }
   m_instanceDeletionQueue.push_back([rawSurface](vk::Instance instance) {
     instance.destroySurfaceKHR(rawSurface, nullptr);
     ENGINE_DEBUG("Destroyed Surface");
   });
   return (vk::SurfaceKHR)rawSurface;
 }
-// DEBUG MESSENGER
+#ifdef DEBUG //debug Messenger
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(                  //
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,    //
     VkDebugUtilsMessageTypeFlagsEXT messageType,               //
@@ -134,6 +142,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(                  //
 }
 
 void InstanceManager::MakeDebugMessenger() {
+  ENGINE_INFO("Making Debug Messenger");
   vk::DebugUtilsMessengerCreateInfoEXT createInfo{};
   createInfo.flags = vk::DebugUtilsMessengerCreateFlagBitsEXT();
   createInfo.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
@@ -152,3 +161,4 @@ void InstanceManager::MakeDebugMessenger() {
   });
   m_debugMessenger = messenger;
 }
+#endif

@@ -2,6 +2,7 @@
 #include "src/vulkan/renderer.hpp"
 #include <atomic>
 #include <thread>
+using namespace Engine;
 void Spawn_Render_Thread(GLFWwindow *window, std::atomic<bool> *done) {
   // make engine
   while (!*done) {
@@ -11,10 +12,10 @@ void Spawn_Render_Thread(GLFWwindow *window, std::atomic<bool> *done) {
 }
 
 void Run() {
-  Engine::Core::Log::Init();
+  Core::Log::Init();
   ENGINE_INFO("Init");
-  Engine::Core::Window app(800, 600, "Vulkat Engine");
-  Engine::Vulkan::Renderer renderer(app.m_window);
+  Core::Window app(800, 600, "Vulkat Engine");
+  Vulkan::Renderer renderer(app.m_window);
 
   std::atomic<bool> done = false;
   std::thread render_thread(Spawn_Render_Thread, app.m_window, &done);
