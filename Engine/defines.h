@@ -12,7 +12,7 @@
 #include <vector>
 
 // Logging system
-#include "src/core/log.hpp"
+#include "src/common/log.hpp"
 
 // Unsigned int types.
 typedef uint8_t u8;
