@@ -186,13 +186,23 @@ vk::RenderPass PipelineManager::MakeRenderPass(DeviceManager &devices, Swapchain
   vk::SubpassDescription subpass{};
   subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
   subpass.setColorAttachmentCount(1);
-  subpass.setColorAttachments(colorAttachmentRef);
+  subpass.setPColorAttachments(&colorAttachmentRef);
+
+  vk::SubpassDependency dependency{};
+  dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL);
+  dependency.setDstSubpass(0);
+  dependency.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+  dependency.setSrcAccessMask(vk::AccessFlagBits::eNone);
+  dependency.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+  dependency.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
 
   vk::RenderPassCreateInfo renderPassInfo{};
   renderPassInfo.setAttachmentCount(1);
-  renderPassInfo.setAttachments(colorAttachment);
+  renderPassInfo.setPAttachments(&colorAttachment);
   renderPassInfo.setSubpassCount(1);
-  renderPassInfo.setSubpasses(subpass);
+  renderPassInfo.setPSubpasses(&subpass);
+  renderPassInfo.setDependencyCount(1);
+  renderPassInfo.setPDependencies(&dependency);
 
   vk::RenderPass renderPass;
   try {
