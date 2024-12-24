@@ -1,3 +1,4 @@
+#include "log.hpp"
 namespace Engine::Core {
 std::shared_ptr<spdlog::logger> Log::m_engineLogger;
 void Log::Init() {

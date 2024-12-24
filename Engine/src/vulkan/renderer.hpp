@@ -2,19 +2,23 @@
 #include "device.hpp"
 #include "frame.hpp"
 #include "instance.hpp"
+#include "pipeline.hpp"
 #include "swapchain.hpp"
-namespace Engine::Vulkan {
-class Renderer {
+namespace Engine {
+class VulkanEngine {
 public:
-  Renderer(GLFWwindow *window);
-  ~Renderer();
+  VulkanEngine(GLFWwindow *window);
+  ~VulkanEngine();
+  void Draw();
 
 private:
-  InstanceManager m_instanceManager;
-  DeviceManager m_deviceManager;
-  vk::SurfaceKHR m_surface;
+  Vulkan::InstanceManager m_instanceManager;
+  Vulkan::DeviceManager m_deviceManager;
+  Vulkan::Swapchain m_swapchain;
+  Vulkan::PipelineManager m_pipeline;
 
-  Swapchain m_swapchain;
-  std::vector<Frame> m_frames;
+  vk::SurfaceKHR m_surface;
+  std::vector<Vulkan::Frame> m_frames;
+  std::vector<vk::ShaderEXT> shaders;
 };
-} // namespace Engine::Vulkan
+} // namespace Engine

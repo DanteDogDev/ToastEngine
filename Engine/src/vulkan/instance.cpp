@@ -1,5 +1,4 @@
 #include "instance.hpp"
-#include "src/core/log.hpp"
 #include "vklog.hpp"
 #include "vulkanConfig.hpp"
 using namespace Engine::Vulkan;
@@ -9,8 +8,8 @@ void InstanceManager::Init() {
   AddRequiredExtensions();
   SupportedByInstance();
   m_instance = MakeInstance("Vulkat Engine");
-#ifdef DEBUG
   m_dldi.init(m_instance, vkGetInstanceProcAddr);
+#ifdef DEBUG
   MakeDebugMessenger();
 #endif
 }
@@ -60,10 +59,13 @@ vk::Instance InstanceManager::MakeInstance(const char *appName) {
 
 void InstanceManager::AddRequiredExtensions() {
   uint32_t glfwExtensionCount = 0;
-  const char **glfwExtensions;
-  glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+  const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
   for (u32 i = 0; i < glfwExtensionCount; i++) {
-    VulkanConfig::instanceExtensions.push_back(glfwExtensions[i]);
+    const char *extension = glfwExtensions[i];
+    auto it = std::find(VulkanConfig::instanceExtensions.begin(), VulkanConfig::instanceExtensions.end(), extension);
+    if (it == VulkanConfig::instanceExtensions.end()) {
+      VulkanConfig::instanceExtensions.push_back(extension);
+    }
   }
 }
 
@@ -120,7 +122,7 @@ vk::SurfaceKHR InstanceManager::MakeSurface(GLFWwindow *window) {
   });
   return (vk::SurfaceKHR)rawSurface;
 }
-#ifdef DEBUG //debug Messenger
+#ifdef DEBUG                                                   // debug Messenger
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(                  //
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,    //
     VkDebugUtilsMessageTypeFlagsEXT messageType,               //

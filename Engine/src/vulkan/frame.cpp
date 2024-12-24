@@ -1,7 +1,5 @@
 #include "frame.hpp"
 #include "image.hpp"
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_handles.hpp>
 using namespace Engine::Vulkan;
 
 Frame::Frame(vk::Image image, DeviceManager &devices, vk::Format swapchainFormat) : m_image(image) {

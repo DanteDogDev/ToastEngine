@@ -11,6 +11,13 @@ static std::vector<const char *> instanceLayers = {
 };
 static std::vector<const char *> physicalDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    "VK_EXT_shader_object",
+
+};
+
+static std::vector<vk::DynamicState> pipelineDynamicStates = {
+    vk::DynamicState::eViewport,
+    vk::DynamicState::eScissor,
 };
 
 } // namespace VulkanConfig

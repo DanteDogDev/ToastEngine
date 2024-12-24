@@ -1,7 +1,5 @@
 #include "swapchain.hpp"
-#include "src/core/log.hpp"
 #include "src/vulkan/vklog.hpp"
-#include <exception>
 using namespace Engine::Vulkan;
 
 void Swapchain::Init(DeviceManager &devices, vk::SurfaceKHR surface, u32 width, u32 height) {

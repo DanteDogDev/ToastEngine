@@ -1,6 +1,8 @@
 #include "device.hpp"
 #include "src/vulkan/vklog.hpp"
 #include "vulkanConfig.hpp"
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_structs.hpp>
 using namespace Engine::Vulkan;
 void DeviceManager::Init(vk::Instance instance, vk::SurfaceKHR surface) {
   ENGINE_INFO("Creating Devices Object")
@@ -94,6 +96,7 @@ vk::Device DeviceManager::CreateLogicalDevice() {
   queueInfo.pQueuePriorities = &queuePriority;
 
   vk::PhysicalDeviceFeatures deviceFeatures = vk::PhysicalDeviceFeatures();
+  vk::PhysicalDeviceShaderObjectFeaturesEXT shaderObject = vk::PhysicalDeviceShaderObjectFeaturesEXT(true);
 
   vk::DeviceCreateInfo deviceInfo{};
   deviceInfo.pQueueCreateInfos = &queueInfo;
@@ -101,6 +104,7 @@ vk::Device DeviceManager::CreateLogicalDevice() {
   deviceInfo.pEnabledFeatures = &deviceFeatures;
   deviceInfo.enabledExtensionCount = (u32)VulkanConfig::physicalDeviceExtensions.size();
   deviceInfo.ppEnabledExtensionNames = VulkanConfig::physicalDeviceExtensions.data();
+  deviceInfo.pNext = &shaderObject;
 
   vk::Device logicalDevice;
   try {

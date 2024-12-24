@@ -1,8 +1,4 @@
 #include "vklog.hpp"
-#include "src/core/log.hpp"
-#include <vulkan/vulkan_enums.hpp>
-#include <vulkan/vulkan_structs.hpp>
-#include <vulkan/vulkan_to_string.hpp>
 
 void LogList(const char **list, u32 size) {
   for (u32 i = 0; i < size; i++) {

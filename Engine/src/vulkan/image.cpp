@@ -1,5 +1,3 @@
-#include "src/core/log.hpp"
-#include <exception>
 vk::ImageView CreateImageView(vk::Device logicalDevice, vk::Image image, vk::Format format) {
   vk::ImageViewCreateInfo createInfo{};
   createInfo.image = image;
