@@ -1,5 +1,5 @@
+echo compiling shaders
 SET BIN=../../bin/Resources/shaders
-echo %VULKAN_SDK%
 if not exist "%BIN%" (
     mkdir "%BIN%"
 )
