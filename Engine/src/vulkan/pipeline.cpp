@@ -122,7 +122,7 @@ vk::Pipeline PipelineManager::MakeGraphicsPipeline(DeviceManager &devices, Swapc
   pipelineLayoutInfo.setPushConstantRangeCount(0);
   pipelineLayoutInfo.setPPushConstantRanges(nullptr);
 
-  vk::RenderPass renderPass = MakeRenderPass(devices, swapchain);
+  m_renderPass = MakeRenderPass(devices, swapchain);
   vk::PipelineLayout pipelineLayout;
 
   try {
@@ -148,7 +148,7 @@ vk::Pipeline PipelineManager::MakeGraphicsPipeline(DeviceManager &devices, Swapc
   pipelineInfo.setPDynamicState(&dynamicState);
 
   pipelineInfo.setLayout(pipelineLayout);
-  pipelineInfo.setRenderPass(renderPass);
+  pipelineInfo.setRenderPass(m_renderPass);
   pipelineInfo.setSubpass(0);
 
   pipelineInfo.setBasePipelineHandle(nullptr);

@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include "src/vulkan/frame.hpp"
 using namespace Engine;
 VulkanEngine::VulkanEngine(GLFWwindow *window) {
   m_instanceManager.Init();
@@ -12,10 +13,15 @@ VulkanEngine::VulkanEngine(GLFWwindow *window) {
   for (vk::Image image : images) {
     m_frames.push_back(Vulkan::Frame(image, m_deviceManager, m_swapchain.m_format.format));
   }
-
-  // shaders = MakeShaderObjects(m_deviceManager, m_instanceManager.m_dldi, "bin/Resources/shaders/vertex.spv", "bin/Resources/shaders/fragment.spv");
-
   m_pipeline.Init(m_deviceManager, m_swapchain);
+
+  std::vector<vk::ImageView> imageViews;
+  for (Vulkan::Frame frame : m_frames) {
+    imageViews.push_back(frame.m_imageView);
+  }
+  for (Vulkan::Frame frame : m_frames) {
+    frame.CreateFrameBuffer(m_deviceManager, imageViews, m_pipeline.m_renderPass, m_swapchain.m_extent);
+  }
 }
 void VulkanEngine::Draw() {}
 VulkanEngine::~VulkanEngine() {}

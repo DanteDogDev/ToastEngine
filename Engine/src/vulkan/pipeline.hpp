@@ -7,6 +7,7 @@ class PipelineManager {
 public:
   void Init(DeviceManager &devices, Swapchain &swapchain);
   vk::Pipeline m_graphicsPipeline;
+  vk::RenderPass m_renderPass;
 
 private:
   vk::Pipeline MakeGraphicsPipeline(DeviceManager &devices, Swapchain &swapchain);
