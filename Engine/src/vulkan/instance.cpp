@@ -29,20 +29,20 @@ vk::Instance InstanceManager::MakeInstance(const char *appName) {
   u32 version = vk::enumerateInstanceVersion();
   LogVersion(version);
   vk::ApplicationInfo appInfo;
-  appInfo.pApplicationName = appName;
-  appInfo.applicationVersion = version;
-  appInfo.pEngineName = "Vulkat Engine";
-  appInfo.engineVersion = version;
-  appInfo.apiVersion = version;
+  appInfo.setPApplicationName(appName);
+  appInfo.setApplicationVersion(version);
+  appInfo.setPEngineName("Vulkat Engine");
+  appInfo.setEngineVersion(version);
+  appInfo.setApiVersion(version);
 
   // Instance Creation Info
   vk::InstanceCreateInfo createInfo;
-  createInfo.flags = vk::InstanceCreateFlags();
-  createInfo.pApplicationInfo = &appInfo;
-  createInfo.enabledLayerCount = (u32)VulkanConfig::instanceLayers.size();
-  createInfo.ppEnabledLayerNames = VulkanConfig::instanceLayers.data();
-  createInfo.enabledExtensionCount = (u32)VulkanConfig::instanceExtensions.size();
-  createInfo.ppEnabledExtensionNames = VulkanConfig::instanceExtensions.data();
+  createInfo.setFlags(vk::InstanceCreateFlags());
+  createInfo.setPApplicationInfo(&appInfo);
+  createInfo.setEnabledLayerCount((u32)VulkanConfig::instanceLayers.size());
+  createInfo.setPpEnabledLayerNames(VulkanConfig::instanceLayers.data());
+  createInfo.setEnabledExtensionCount((u32)VulkanConfig::instanceExtensions.size());
+  createInfo.setPpEnabledExtensionNames(VulkanConfig::instanceExtensions.data());
   vk::Instance instance;
   try {
     instance = vk::createInstance(createInfo);

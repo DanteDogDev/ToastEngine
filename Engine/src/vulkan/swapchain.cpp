@@ -11,34 +11,34 @@ void Swapchain::Init(DeviceManager &devices, vk::SurfaceKHR surface, u32 width, 
   m_imageCount = std::min(support.capabilities.maxImageCount, support.capabilities.minImageCount + 1);
 
   vk::SwapchainCreateInfoKHR createInfo{};
-  createInfo.flags = vk::SwapchainCreateFlagsKHR();
-  createInfo.surface = surface;
-  createInfo.minImageCount = m_imageCount;
-  createInfo.imageFormat = m_format.format;
-  createInfo.imageColorSpace = m_format.colorSpace;
-  createInfo.imageExtent = m_extent;
-  createInfo.imageArrayLayers = 1;
-  createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+  createInfo.setFlags(vk::SwapchainCreateFlagsKHR());
+  createInfo.setSurface(surface);
+  createInfo.setMinImageCount(m_imageCount);
+  createInfo.setImageFormat(m_format.format);
+  createInfo.setImageColorSpace(m_format.colorSpace);
+  createInfo.setImageExtent(m_extent);
+  createInfo.setImageArrayLayers(1);
+  createInfo.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
   // Sharing Mode
   // eExclusive: An image is owned by one queue family at a time
   // eConcurrent: An image can be used across multiple queue familys
   u32 queueFamilyIndices[] = {devices.m_queueFamilyIndices.graphicsFamilies[0], devices.m_queueFamilyIndices.presentFamilies[0]};
   if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
     ENGINE_DEBUG("SharingMode:eConcurrent"); // If graphics queue and present queue are different
-    createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
-    createInfo.queueFamilyIndexCount = 2;
-    createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    createInfo.setImageSharingMode(vk::SharingMode::eConcurrent);
+    createInfo.setQueueFamilyIndexCount(2);
+    createInfo.setPQueueFamilyIndices(queueFamilyIndices);
   } else {
     ENGINE_DEBUG("SharingMode:eExclusive"); // More performant
-    createInfo.imageSharingMode = vk::SharingMode::eExclusive;
-    createInfo.queueFamilyIndexCount = 0;
-    createInfo.pQueueFamilyIndices = nullptr;
+    createInfo.setImageSharingMode(vk::SharingMode::eExclusive);
+    createInfo.setQueueFamilyIndexCount(0);
+    createInfo.setPQueueFamilyIndices(nullptr);
   }
-  createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-  createInfo.preTransform = support.capabilities.currentTransform;
-  createInfo.presentMode = presentMode;
-  createInfo.clipped = VK_TRUE;
-  createInfo.oldSwapchain = VK_NULL_HANDLE;
+  createInfo.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque);
+  createInfo.setPreTransform(support.capabilities.currentTransform);
+  createInfo.setPresentMode(presentMode);
+  createInfo.setClipped(VK_TRUE);
+  createInfo.setOldSwapchain(VK_NULL_HANDLE);
 
   try {
     m_chain = devices.m_logicalDevice.createSwapchainKHR(createInfo);

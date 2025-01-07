@@ -89,22 +89,20 @@ vk::Device DeviceManager::CreateLogicalDevice() {
   ENGINE_INFO("Creating Logical Device");
 
   vk::DeviceQueueCreateInfo queueInfo{};
-  queueInfo.flags = vk::DeviceQueueCreateFlags();
-  queueInfo.queueFamilyIndex = m_queueFamilyIndices.graphicsFamilies[0];
-  queueInfo.queueCount = 1;
+  queueInfo.setFlags(vk::DeviceQueueCreateFlags());
+  queueInfo.setQueueFamilyIndex(m_queueFamilyIndices.graphicsFamilies[0]);
+  queueInfo.setQueueCount(1);
   float queuePriority = 1.0f;
-  queueInfo.pQueuePriorities = &queuePriority;
+  queueInfo.setPQueuePriorities(&queuePriority);
 
   vk::PhysicalDeviceFeatures deviceFeatures = vk::PhysicalDeviceFeatures();
-  vk::PhysicalDeviceShaderObjectFeaturesEXT shaderObject = vk::PhysicalDeviceShaderObjectFeaturesEXT(true);
 
   vk::DeviceCreateInfo deviceInfo{};
-  deviceInfo.pQueueCreateInfos = &queueInfo;
-  deviceInfo.queueCreateInfoCount = 1;
-  deviceInfo.pEnabledFeatures = &deviceFeatures;
-  deviceInfo.enabledExtensionCount = (u32)VulkanConfig::physicalDeviceExtensions.size();
-  deviceInfo.ppEnabledExtensionNames = VulkanConfig::physicalDeviceExtensions.data();
-  deviceInfo.pNext = &shaderObject;
+  deviceInfo.setPQueueCreateInfos(&queueInfo);
+  deviceInfo.setQueueCreateInfoCount(1);
+  deviceInfo.setPEnabledFeatures(&deviceFeatures);
+  deviceInfo.setEnabledExtensionCount((u32)VulkanConfig::physicalDeviceExtensions.size());
+  deviceInfo.setPpEnabledExtensionNames(VulkanConfig::physicalDeviceExtensions.data());
 
   vk::Device logicalDevice;
   try {
