@@ -8,20 +8,11 @@ VulkanEngine::VulkanEngine(GLFWwindow *window) {
 
   int width, height;
   glfwGetWindowSize(window, &width, &height);
+
   m_swapchain.Init(m_deviceManager, m_surface, width, height);
-  std::vector<vk::Image> images = m_deviceManager.m_logicalDevice.getSwapchainImagesKHR(m_swapchain.m_chain);
-  for (vk::Image image : images) {
-    m_frames.push_back(Vulkan::Frame(image, m_deviceManager, m_swapchain.m_format.format));
-  }
   m_pipeline.Init(m_deviceManager, m_swapchain);
 
-  std::vector<vk::ImageView> imageViews;
-  for (Vulkan::Frame frame : m_frames) {
-    imageViews.push_back(frame.m_imageView);
-  }
-  for (Vulkan::Frame frame : m_frames) {
-    frame.CreateFrameBuffer(m_deviceManager, imageViews, m_pipeline.m_renderPass, m_swapchain.m_extent);
-  }
+  m_frameManager.Init(m_deviceManager, m_swapchain, m_pipeline.m_renderPass);
 }
 void VulkanEngine::Draw() {}
 VulkanEngine::~VulkanEngine() {}

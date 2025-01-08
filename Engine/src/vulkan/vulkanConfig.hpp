@@ -1,7 +1,7 @@
 namespace VulkanConfig {
 static std::vector<const char *> instanceExtensions = {
 #ifdef DEBUG
-    VK_EXT_DEBUG_UTILS_EXTENSION_NAME, // REMOVE THESE IF NOT DEBUG
+    vk::EXTDebugUtilsExtensionName, // REMOVE THESE IF NOT DEBUG
 #endif
 };
 static std::vector<const char *> instanceLayers = {
@@ -10,8 +10,7 @@ static std::vector<const char *> instanceLayers = {
 #endif
 };
 static std::vector<const char *> physicalDeviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    "VK_EXT_shader_object",
+    vk::KHRSwapchainExtensionName,
 
 };
 

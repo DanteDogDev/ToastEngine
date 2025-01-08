@@ -16,9 +16,10 @@ private:
   Vulkan::DeviceManager m_deviceManager;
   Vulkan::Swapchain m_swapchain;
   Vulkan::PipelineManager m_pipeline;
+  Vulkan::FrameManager m_frameManager;
 
   vk::SurfaceKHR m_surface;
-  std::vector<Vulkan::Frame> m_frames;
+  std::vector<Vulkan::FrameManager> m_frames;
   std::vector<vk::ShaderEXT> shaders;
 };
 } // namespace Engine
