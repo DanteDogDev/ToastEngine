@@ -1,5 +1,6 @@
 #pragma once
 #include "src/vulkan/device.hpp"
+#include <vulkan/vulkan_handles.hpp>
 #include <vulkan/vulkan_structs.hpp>
 namespace Engine::Vulkan {
 struct SurfaceDetails {
@@ -15,6 +16,12 @@ public:
   vk::SwapchainKHR m_chain;
   vk::SurfaceFormatKHR m_format;
   vk::Extent2D m_extent;
+
+  std::vector<vk::Image> m_images;
+  std::vector<vk::ImageView> m_imageViews;
+  std::vector<vk::Framebuffer> m_frameBuffers;
+
+  void CreateFrames(DeviceManager &devices, vk::RenderPass renderPass);
 
 private:
   SurfaceDetails QuerySurfaceSupport(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface);

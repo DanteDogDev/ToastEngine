@@ -1,5 +1,4 @@
 #include "renderer.hpp"
-#include "src/vulkan/frame.hpp"
 using namespace Engine;
 VulkanEngine::VulkanEngine(GLFWwindow *window) {
   m_instanceManager.Init();
@@ -11,8 +10,7 @@ VulkanEngine::VulkanEngine(GLFWwindow *window) {
 
   m_swapchain.Init(m_deviceManager, m_surface, width, height);
   m_pipeline.Init(m_deviceManager, m_swapchain);
-
-  m_frameManager.Init(m_deviceManager, m_swapchain, m_pipeline.m_renderPass);
+  m_swapchain.CreateFrames(m_deviceManager, m_pipeline.m_renderPass);
 }
 void VulkanEngine::Draw() {}
 VulkanEngine::~VulkanEngine() {}
